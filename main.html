@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Brain Detection</title>
+    <link rel="stylesheet" href="detection/main.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Brain Disorder Detection</h1>
+        <form id="disorderForm">
+            <label for="name">Full Name:</label>
+            <input type="text" id="name" name="name" required>
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" min="1" required>
+            <label for="symptoms">Symptoms (check all that apply):</label>
+            <textarea id="symptoms" name="symptoms" rows="4" placeholder="E.g., headaches, memory loss, confusion" required></textarea>
+            <label for="family_history">Family History of Brain Disorders:</label>
+            <select id="family_history" name="family_history" required>
+                <option value="none">None</option>
+                <option value="Alzheimer's">Alzheimer's</option>
+                <option value="Parkinson's">Parkinson's</option>
+                <option value="Epilepsy">Epilepsy</option>
+                <option value="Other">Other</option>
+            </select>
+            <label for="test_results">Upload MRI/CT Scan or Other Test Results (optional):</label>
+            <input type="file" id="test_results" name="test_results" accept=".jpg,.png,.pdf,.docx,.dcm">
+            <button type="submit">Submit</button>
+        </form>
+        <div id="result"></div>
+    </div>
+    <script src="detection/main.js"></script>
+</body>
+
+</html>
