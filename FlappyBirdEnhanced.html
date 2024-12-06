@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Set canvas to full screen
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    // Game variables
+    let bird = { x: 150, y: 200, width: 40, height: 40, velocity: 0 };
+    let gravity = 0.05; // Reduced gravity for slower descent
+    let pipeSpeed = 1; // Further reduced pipe speed
+    let gapSize = 180; // Adjustable gap size
+    let pipes = [];
+    let score = 0;
+    let lives = 5;
+    let isGameOver = false;
+    let clouds = [];
+    const cloudSpeed = 0.1; // Slower cloud movement
+
+    // Initialize pipes
+    function initPipes() {
+        pipes = [];
+        for (let i = 0; i < 3; i++) {
+            const pipeX = canvas.width + i * 300;
+            const pipeTopHeight = Math.random() * (canvas.height / 2 - 100);
+            pipes.push({ x: pipeX, topHeight: pipeTopHeight, gap: gapSize });
+        }
+    }
+
+    // Initialize clouds
+    function initClouds() {
+        clouds = [];
+        for (let i = 0; i < 5; i++) {
+            const cloudX = Math.random() * canvas.width;
+            const cloudY = Math.random() * 100;
+            const width = 80 + Math.random() * 40;
+            clouds.push({ x: cloudX, y: cloudY, width, height: 30 });
+        }
+    }
+
+    // Start the game
+    function startGame() {
+        bird.y = canvas.height / 2;
+        bird.velocity = 0;
+        score = 0;
+        lives = 5;
+        isGameOver = false;
+        initPipes();
+        initClouds();
+        gameLoop();
+    }
+
+    // Draw bird
+    function drawBird() {
+        ctx.fillStyle = "yellow";
+        ctx.beginPath();
+        ctx.arc(bird.x, bird.y, bird.width / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    // Draw pipes
+    function drawPipes() {
+        ctx.fillStyle = "green";
+        pipes.forEach(pipe => {
+            // Top pipe
+            ctx.fillRect(pipe.x, 0, 50, pipe.topHeight);
+            // Bottom pipe
+            ctx.fillRect(pipe.x, pipe.topHeight + pipe.gap, 50, canvas.height - pipe.topHeight - pipe.gap);
+        });
+    }
+
+    // Draw clouds
+    function drawClouds() {
+        ctx.fillStyle = "white";
+        clouds.forEach(cloud => {
+            ctx.beginPath();
+            ctx.ellipse(cloud.x, cloud.y, cloud.width / 2, cloud.height / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+        });
+    }
+
+    // Update game state
+    function update() {
+        if (isGameOver) return;
+
+        bird.velocity += gravity;
+        bird.y += bird.velocity;
+
+        if (bird.y + bird.height > canvas.height || bird.y < 0) {
+            lives--;
+            if (lives <= 0) {
+                isGameOver = true;
+            } else {
+                bird.y = canvas.height / 2;
+                bird.velocity = 0;
+            }
+        }
+
+        pipes.forEach(pipe => {
+            pipe.x -= pipeSpeed;
+
+            // Recycle pipe
+            if (pipe.x + 50 < 0) {
+                pipe.x = canvas.width;
+                pipe.topHeight = Math.random() * (canvas.height / 2 - 100);
+                score++;
+                if (score % 10 === 0) {
+                    gapSize = Math.max(100, gapSize - 10); // Reduce gap size gradually
+                }
+            }
+
+            // Check collision
+            if (
+                bird.x + bird.width / 2 > pipe.x &&
+                bird.x - bird.width / 2 < pipe.x + 50 &&
+                (bird.y - bird.height / 2 < pipe.topHeight ||
+                    bird.y + bird.height / 2 > pipe.topHeight + pipe.gap)
+            ) {
+                lives--;
+                if (lives <= 0) {
+                    isGameOver = true;
+                }
+            }
+        });
+
+        clouds.forEach(cloud => {
+            cloud.x -= cloudSpeed;
+            if (cloud.x + cloud.width < 0) {
+                cloud.x = canvas.width;
+                cloud.y = Math.random() * 100;
+            }
+        });
+    }
+
+    // Draw game state
+    function draw() {
+        // Background
+        ctx.fillStyle = score % 20 < 10 ? "#87CEEB" : "#001D4E"; // Day/Night cycle
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw clouds
+        drawClouds();
+
+        // Draw ground
+        ctx.fillStyle = "brown";
+        ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+
+        // Draw pipes
+        drawPipes();
+
+        // Draw bird
+        drawBird();
+
+        // Draw score and lives
+        ctx.fillStyle = "white";
+        ctx.font = "24px Arial";
+        ctx.fillText(`Score: ${score}`, 20, 30);
+        ctx.fillText(`Lives: ${lives}`, 20, 60);
+
+        // Draw Game Over
+        if (isGameOver) {
+            ctx.fillStyle = "red";
+            ctx.font = "40px Arial";
+            ctx.fillText("GAME OVER", canvas.width / 2 - 120, canvas.height / 2);
+            ctx.font = "20px Arial";
+            ctx.fillText("Press Enter to Restart", canvas.width / 2 - 100, canvas.height / 2 + 40);
+        }
+    }
+
+    // Game loop
+    function gameLoop() {
+        update();
+        draw();
+
+        if (!isGameOver) {
+            requestAnimationFrame(gameLoop);
+        }
+    }
+
+    // Restart game on Enter key
+    document.addEventListener("keydown", e => {
+        if (e.code === "Space" && !isGameOver) {
+            bird.velocity = -2; // Bird jump
+        } else if (e.code === "Enter" && isGameOver) {
+            startGame();
+        }
+    });
+
+    // Initialize and start the game
+    startGame();
+</script>
+</body>
+</html>
