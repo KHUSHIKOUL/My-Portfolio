@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Speed Test </title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            margin: 0;
+            padding: 0;
+            color: white;
+        }
+        
+        .navbar {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            font-size: 26px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        h2 {
+            color: #ffdd57;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        #text {
+            font-size: 18px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            text-align: left;
+            white-space: pre-line;
+            color: #fff;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 100px;
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            resize: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        
+        button {
+            margin-top: 10px;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        
+        .start-btn {
+            background: #28a745;
+            color: white;
+        }
+        
+        .reset-btn {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .next-btn {
+            background: #ffc107;
+            color: black;
+            display: none;
+        }
+        
+        button:hover {
+            transform: scale(1.1);
+        }
+        
+        #timer {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #ff4d4d;
+        }
+        
+        #result {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">Typing Speed Test </div>
+    <div class="container">
+        <h2 id="level-title">Level 1</h2>
+        <p id="timer">Time Left: 60s</p>
+        <p id="text">Click "Start Test" to begin.</p>
+        <textarea id="input" placeholder="Start typing here..." disabled oninput="checkTyping()"></textarea>
+        <br>
+        <button class="start-btn" onclick="startTest()">Start Test</button>
+        <button class="reset-btn" onclick="resetTest()">Reset</button>
+        <button class="next-btn" onclick="nextLevel()">Next Level</button>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("service-worker.js")
+                .then(() => console.log("Service Worker Registered"))
+                .catch(error => console.log("Service Worker Registration Failed:", error));
+        }
+        const levels = [{
+            sentences: [
+                "The quick brown fox jumps over the lazy dog.",
+                "Typing speed tests measure your words per minute."
+            ],
+            time: 58
+        }, {
+            sentences: [
+                "JavaScript makes web pages interactive and dynamic.",
+                "Coding is both an art and a science.",
+                "Practicing daily improves typing speed significantly."
+            ],
+            time: 87
+        }, {
+            sentences: [
+                "Accuracy is crucial in typing speed tests.",
+                "Professional typists type over 80 words per minute.",
+                "Keyboard shortcuts can boost productivity."
+            ],
+            time: 89
+        }, {
+            sentences: [
+                "Fast typing requires muscle memory and focus.",
+                "Regular practice enhances both speed and accuracy.",
+                "Competitive typists reach speeds of over 100 WPM."
+            ],
+            time: 91
+        }, {
+            sentences: [
+                "Mastering typing can improve overall efficiency.",
+                "High accuracy leads to fewer corrections and better results.",
+                "Advanced typists use specialized mechanical keyboards."
+            ],
+            time: 93
+        }, {
+            sentences: [
+                "The fastest typist in the world types over 200 WPM.",
+                "Typing competitions help in skill improvement.",
+                "Perfecting touch typing allows effortless work."
+            ],
+            time: 95
+        }];
+
+        let currentLevel = 0;
+        let sentenceIndex = 0;
+        let timer;
+        let timeLeft;
+
+        function startTest() {
+            sentenceIndex = 0;
+            document.getElementById("text").textContent = levels[currentLevel].sentences[sentenceIndex];
+            document.getElementById("input").value = "";
+            document.getElementById("input").disabled = false;
+            document.getElementById("input").focus();
+            document.getElementById("result").textContent = "";
+            document.querySelector(".next-btn").style.display = "none";
+            timeLeft = levels[currentLevel].time;
+            document.getElementById("timer").textContent = `Time Left: ${timeLeft}s`;
+            clearInterval(timer);
+            timer = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById("timer").textContent = `Time Left: ${timeLeft}s`;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                document.getElementById("input").disabled = true;
+                document.getElementById("result").textContent = "Time's up! Try again.";
+            }
+        }
+
+        function checkTyping() {
+            let typedText = document.getElementById("input").value.trim();
+            let originalText = levels[currentLevel].sentences[sentenceIndex];
+
+            if (typedText === originalText) {
+                document.getElementById("result").textContent = "Correct! Moving to next sentence...";
+                sentenceIndex++;
+
+                if (sentenceIndex < levels[currentLevel].sentences.length) {
+                    document.getElementById("text").textContent = levels[currentLevel].sentences[sentenceIndex];
+                    document.getElementById("input").value = "";
+                } else {
+                    clearInterval(timer);
+                    document.getElementById("result").textContent = "Level Completed! Click 'Next Level' to continue.";
+                    document.getElementById("input").disabled = true;
+                    document.querySelector(".next-btn").style.display = "inline-block";
+                }
+            }
+        }
+
+        function nextLevel() {
+            if (currentLevel < levels.length - 1) {
+                currentLevel++;
+                sentenceIndex = 0;
+                document.getElementById("level-title").textContent = `Level ${currentLevel + 1}`;
+                document.querySelector(".next-btn").style.display = "none";
+                resetTest();
+            } else {
+                // Show Congratulations pop-up at the end
+                alert("🎉 Congratulations! You completed all levels! 🎉");
+            }
+        }
+
+        function resetTest() {
+            clearInterval(timer);
+            document.getElementById("text").textContent = "Click 'Start Test' to begin.";
+            document.getElementById("input").disabled = true;
+            document.getElementById("result").textContent = "";
+        }
+    </script>
+</body>
+
+</html>
